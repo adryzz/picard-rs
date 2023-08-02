@@ -19,8 +19,6 @@ fn shader_macro(input: TokenStream) -> TokenStream {
 
     let path = get_shader_path(&filename);
 
-    dbg!(&path);
-
     let file = match std::fs::read_to_string(&path) {
         Ok(s) => s,
         Err(e) => {
@@ -50,7 +48,8 @@ fn shader_macro(input: TokenStream) -> TokenStream {
 
 fn get_shader_path(filename: &str) -> PathBuf {
     let file = Span::call_site().source_file();
-    
+
+    // This is to make it behave kinda like include_bytes! with the path
     file.path().with_file_name(filename)
 }
 
