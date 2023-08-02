@@ -1,8 +1,10 @@
+use smallvec::SmallVec;
+
 use crate::utils::bit;
 
-const MAX_UNIFORM: usize = 0x60;
-const MAX_CONSTANT: usize = 0x60;
-const MAX_OUTPUT: usize = 16;
+pub const MAX_UNIFORM: usize = 0x60;
+pub const MAX_CONSTANT: usize = 0x60;
+pub const MAX_OUTPUT: usize = 16;
 
 #[derive(Debug, Clone)]
 pub struct Uniform {
@@ -38,6 +40,19 @@ pub enum Param {
 }
 
 #[derive(Debug, Clone)]
+pub struct StackEntry {
+    r#type: usize,
+    pos: usize,
+    extra: StackExtra,
+}
+
+#[derive(Debug, Clone)]
+pub enum StackExtra {
+    StrExtra(String),
+    UIntExtra(usize),
+}
+
+#[derive(Debug, Clone)]
 pub struct DvleData {
     pub file_name: String,
     pub entrypoint: String,
@@ -58,16 +73,13 @@ pub struct DvleData {
     pub geo_shader_variable_num: u8,
     pub geo_shader_fixed_num: u8,
 
-    pub uniform_table: [Uniform; MAX_UNIFORM],
-    pub uniform_count: u32,
+    pub uniform_table: SmallVec<[Uniform; MAX_UNIFORM]>,
     pub symbol_size: usize,
 
-    pub constant_table: [Constant; MAX_CONSTANT],
-    pub constant_count: u32,
+    pub constant_table: SmallVec<[Constant; MAX_CONSTANT]>,
 
-    pub output_table: [u64; MAX_OUTPUT],
+    pub output_table: SmallVec<[u32; MAX_CONSTANT]>,
     pub output_used_reg: u32,
-    pub output_count: u32
 }
 
 impl DvleData {
@@ -88,17 +100,14 @@ impl DvleData {
             geo_shader_variable_num: 0,
             geo_shader_fixed_num: 0,
 
-            uniform_count: 0,
             symbol_size: 0,
-            constant_count: 0,
             output_used_reg: 0,
-            output_count: 0,
 
             entry_start: 0,
             entry_end: 0, // FIXME: fix this shitty ass constructor
-            uniform_table: std::array::from_fn(|_| Uniform::new()),
-            constant_table: unsafe {std::mem::zeroed()},
-            output_table: unsafe {std::mem::zeroed()},
+            uniform_table: SmallVec::new(),
+            constant_table: SmallVec::new(),
+            output_table: SmallVec::new(),
         }
     }
 

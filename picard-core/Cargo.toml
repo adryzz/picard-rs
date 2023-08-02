@@ -6,4 +6,5 @@ edition = "2021"
 
 [dependencies]
 byteorder = "1.4.3"
+smallvec = { version = "1.11.0", features = ["const_new"] }
 thiserror = "1.0.44"
