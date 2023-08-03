@@ -93,7 +93,7 @@ impl ShaderAssembler {
             buf.write_u64(self.g_opdesc_table[i] as u64)?; 
         }
 
-        for dvle in &self.dvle_table_iter {
+        for dvle in &mut self.dvle_table_iter {
             buf.write_u32(0x454C5644)?; // DVLE
             buf.write_u16(0x1002)?; // maybe version?
             buf.write_u8(if dvle.is_geo_shader {1} else {0})?; // Shader type
@@ -121,9 +121,69 @@ impl ShaderAssembler {
             buf.write_u32(dvle.symbol_size as u32)?; // size of symbol table
 
             // Sort uniforms by position
-            //dvle.u
+            dvle.uniform_table.sort();
 
-            //TODO: CONTINUE
+            // Write constants
+            for c in &dvle.constant_table {
+                buf.write_u16(c.r#type as u16)?; // ???? writing an u32 as an u16???
+                match c.param {
+                    dvle::Param::FParam(f) => {
+                        buf.write_u16((c.reg_id-0x20) as u16)?; // ???? writing an u32 as an u16???
+                        for j in f {
+                            buf.write_u32(utils::f32tof24(j))?; // be careful in f32tof24
+                        }
+                    },
+                    dvle::Param::IParam(i) => {
+                        buf.write_u16((c.reg_id-0x80) as u16)?; // ???? writing an u32 as an u16???
+                        for j in i {
+                            buf.write_u8(j)?;
+                        }
+                    },
+                    dvle::Param::BParam(b) => {
+                        buf.write_u16((c.reg_id-0x88) as u16)?; // ???? writing an u32 as an u16???
+                        buf.write_u32(if b {1} else {0})?;
+                    },
+                }
+                // FIXME: handle the padding case at line 234-236
+            }
+            
+            // Write outputs
+            for o in &dvle.output_table {
+                buf.write_u64(*o as u64)?; // ?? ok lol u32 as u64
+            }
+
+            // Write uniforms
+            let mut sp = 0usize;
+            for u in &dvle.uniform_table {
+                let l = u.name.len()+1; // Unused ???
+
+                buf.write_u32(sp as u32)?;
+                sp += 1;
+
+                let mut pos = u.pos;
+                if pos >= 0x20 {
+                    pos -= 0x10;
+                }
+
+                buf.write_u32(pos)?;
+                buf.write_u32(pos+u.size-1)?;
+            }
+
+            // Write symbols
+            for u in &dvle.uniform_table {
+                let s = u.name.replace('$', ".");
+                let l = s.len()+1; // ??? unused at line 262
+                buf.write_raw(s.as_bytes())?;
+
+                buf.write_u8(0)?; // IMPORTANT: NULL TERMINATE THE STRING
+            }
+
+            // Word alignment
+            let pos = buf.tell();
+            let pad = ((pos+3)&!3)-pos;
+            for _ in 0..pad {
+                buf.write_u8(0)?;
+            }
         }
         
         Ok(buf)

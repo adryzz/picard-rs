@@ -91,12 +91,12 @@ impl ShaderBuffer {
         }
     }
 
-    pub(crate) fn read_raw(&mut self, buffer: &mut [u8]) -> bool {
-        self.buf.read_exact(buffer).is_ok()
+    pub(crate) fn read_raw(&mut self, buffer: &mut [u8]) -> Result<(), io::Error> {
+        self.buf.read_exact(buffer)
     }
 
-    pub(crate) fn write_raw(&mut self, buffer: &[u8]) -> bool {
-        self.buf.write_all(buffer).is_ok()
+    pub(crate) fn write_raw(&mut self, buffer: &[u8]) -> Result<(), io::Error> {
+        self.buf.write_all(buffer)
     }
 
     pub(crate) fn seek(&mut self, pos: u64, mode: io::SeekFrom) -> Result<u64, io::Error> {

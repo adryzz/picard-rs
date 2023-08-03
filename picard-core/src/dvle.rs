@@ -8,10 +8,10 @@ pub const MAX_OUTPUT: usize = 16;
 
 #[derive(Debug, Clone)]
 pub struct Uniform {
-    name: String,
-    pos: u32,
-    size: u32,
-    r#type: u32
+    pub name: String,
+    pub pos: u32,
+    pub size: u32,
+    pub r#type: u32
 }
 
 impl Uniform {
@@ -25,11 +25,31 @@ impl Uniform {
     }
 }
 
+impl PartialEq for Uniform {
+    fn eq(&self, other: &Self) -> bool {
+        self.pos == other.pos
+    }
+}
+
+impl Eq for Uniform {}
+
+impl PartialOrd for Uniform {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.pos.partial_cmp(&other.pos)
+    }
+}
+
+impl Ord for Uniform {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.pos.cmp(&other.pos)
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct Constant {
-    reg_id: u32,
-    r#type: u32,
-    param: Param
+    pub reg_id: u32,
+    pub r#type: u32,
+    pub param: Param
 }
 
 #[derive(Debug, Clone, Copy)]
